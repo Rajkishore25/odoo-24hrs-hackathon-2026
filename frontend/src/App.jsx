@@ -11,10 +11,13 @@ import { LeavePage } from "./pages/LeavePage.jsx";
 import { SalaryStructuresPage } from "./pages/SalaryStructuresPage.jsx";
 import { PayrunsPage } from "./pages/PayrunsPage.jsx";
 import { EmployeePortalPage } from "./pages/EmployeePortalPage.jsx";
+import { AuditLogsPage } from "./pages/AuditLogsPage.jsx";
+import { DemoTourGuide } from "./components/demo/DemoTourGuide.jsx";
 
 export function App() {
   const { isAuthenticated, loading } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isTourActive, setIsTourActive] = useState(true);
 
   if (loading) {
     return (
@@ -54,6 +57,8 @@ export function App() {
         return <PayrunsPage />;
       case "portal":
         return <EmployeePortalPage />;
+      case "audit":
+        return <AuditLogsPage />;
       default:
         return <DashboardPage setActiveTab={setActiveTab} />;
     }
@@ -63,9 +68,22 @@ export function App() {
     <div className="app-container">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <div className="main-content">
-        <Navbar activeTab={activeTab} />
+        <Navbar
+          activeTab={activeTab}
+          isTourActive={isTourActive}
+          onToggleTour={() => setIsTourActive(!isTourActive)}
+        />
         <main className="content-body">{renderContent()}</main>
       </div>
+
+      {/* Floating Guided Demo Tour Mode */}
+      {isTourActive && (
+        <DemoTourGuide
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onClose={() => setIsTourActive(false)}
+        />
+      )}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   Receipt,
   UserCheck,
   ShieldAlert,
+  History,
 } from "lucide-react";
 
 export function Sidebar({ activeTab, setActiveTab }) {
@@ -21,6 +22,7 @@ export function Sidebar({ activeTab, setActiveTab }) {
     { id: "salary-structures", label: "Salary Structures", icon: Coins },
     { id: "payruns", label: "Payroll Cockpit", icon: Receipt, badge: "Core" },
     { id: "portal", label: "My Self-Service", icon: UserCheck },
+    { id: "audit", label: "Audit Trail", icon: History },
   ];
 
   return (

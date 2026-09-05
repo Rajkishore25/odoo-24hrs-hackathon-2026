@@ -21,15 +21,18 @@ router.get("/health", (req, res) => {
   return sendSuccess(res, { status: "ok", timestamp: new Date().toISOString() }, "PeoplePay360 Backend is healthy");
 });
 
-// Audit log endpoint
-router.get("/audit", optionalAuth, async (req, res, next) => {
+// Audit log endpoints (both /audit and /audit-logs)
+const handleAudit = async (req: any, res: any, next: any) => {
   try {
     const logs = await AuditService.getLogs(req.query as any);
     return sendSuccess(res, logs);
   } catch (error) {
     next(error);
   }
-});
+};
+
+router.get("/audit", optionalAuth, handleAudit);
+router.get("/audit-logs", optionalAuth, handleAudit);
 
 // Phase 1 & 2: HR Domain & Authentication
 router.use("/auth", authRoutes);

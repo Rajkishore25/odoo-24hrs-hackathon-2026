@@ -1,8 +1,8 @@
 import React from "react";
 import { useAuth, DEMO_CREDENTIALS } from "../../context/AuthContext.jsx";
-import { LogOut, User, ShieldCheck, ChevronDown } from "lucide-react";
+import { LogOut, User, ShieldCheck, ChevronDown, Sparkles } from "lucide-react";
 
-export function Navbar({ activeTab }) {
+export function Navbar({ activeTab, onToggleTour, isTourActive }) {
   const { user, role, logout, fastLogin } = useAuth();
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
 
@@ -25,6 +25,19 @@ export function Navbar({ activeTab }) {
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        {/* Hackathon Judge Demo Tour Button */}
+        <button
+          className={`btn ${isTourActive ? "btn-primary" : "btn-secondary"} btn-sm`}
+          onClick={onToggleTour}
+          style={{
+            boxShadow: isTourActive ? "0 0 15px rgba(99, 102, 241, 0.4)" : "none",
+            border: isTourActive ? "1px solid #818cf8" : "1px solid var(--border-subtle)",
+          }}
+        >
+          <Sparkles size={14} color={isTourActive ? "#ffffff" : "#818cf8"} />
+          <span>{isTourActive ? "Tour Active" : "⭐ Start Demo Tour"}</span>
+        </button>
+
         {/* Quick Role Switcher for Hackathon Demo */}
         <div style={{ position: "relative" }}>
           <button
