@@ -14,12 +14,16 @@ export const EMPLOYEE_STATUS = {
   ARCHIVED: "ARCHIVED",
 } as const;
 
+export type EmployeeStatus = (typeof EMPLOYEE_STATUS)[keyof typeof EMPLOYEE_STATUS];
+
 export const CONTRACT_STATUS = {
   DRAFT: "DRAFT",
   ACTIVE: "ACTIVE",
   EXPIRED: "EXPIRED",
   CANCELLED: "CANCELLED",
 } as const;
+
+export type ContractStatus = (typeof CONTRACT_STATUS)[keyof typeof CONTRACT_STATUS];
 
 export const ATTENDANCE_STATUS = {
   PRESENT: "PRESENT",

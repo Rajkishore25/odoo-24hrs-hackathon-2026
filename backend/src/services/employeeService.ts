@@ -1,7 +1,9 @@
 import prisma from "../config/prisma.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { AuditService } from "./auditService.js";
-import { EmployeeStatus } from "@prisma/client";
+import { EmployeeStatus } from "../config/constants.js";
+
+export { EmployeeStatus };
 
 export class EmployeeService {
   public static async getEmployees(query: {
@@ -43,7 +45,6 @@ export class EmployeeService {
         include: {
           contracts: {
             where: { status: "ACTIVE" },
-            take: 1,
             include: {
               workingSchedule: true,
               salaryStructure: true,
@@ -99,6 +100,7 @@ export class EmployeeService {
       department?: string;
       designation?: string;
       joiningDate: string;
+      status?: EmployeeStatus;
       bankAccountNumber?: string;
       bankName?: string;
       userId?: string;
@@ -127,6 +129,7 @@ export class EmployeeService {
         department: data.department,
         designation: data.designation,
         joiningDate: new Date(data.joiningDate),
+        status: data.status || "ACTIVE",
         bankAccountNumber: data.bankAccountNumber,
         bankName: data.bankName,
         userId: data.userId,

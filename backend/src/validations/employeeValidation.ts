@@ -8,6 +8,7 @@ export const createEmployeeSchema = z.object({
   department: z.string().optional(),
   designation: z.string().optional(),
   joiningDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "joiningDate must be in YYYY-MM-DD format"),
+  status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]).optional(),
   bankAccountNumber: z.string().optional(),
   bankName: z.string().optional(),
   userId: z.string().uuid().optional(),
