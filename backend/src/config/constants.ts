@@ -1,0 +1,77 @@
+export const ROLES = {
+  SUPER_ADMIN: "SUPER_ADMIN",
+  HR_MANAGER: "HR_MANAGER",
+  PAYROLL_OFFICER: "PAYROLL_OFFICER",
+  LINE_MANAGER: "LINE_MANAGER",
+  EMPLOYEE: "EMPLOYEE",
+} as const;
+
+export type UserRole = (typeof ROLES)[keyof typeof ROLES];
+
+export const EMPLOYEE_STATUS = {
+  ACTIVE: "ACTIVE",
+  INACTIVE: "INACTIVE",
+  ARCHIVED: "ARCHIVED",
+} as const;
+
+export const CONTRACT_STATUS = {
+  DRAFT: "DRAFT",
+  ACTIVE: "ACTIVE",
+  EXPIRED: "EXPIRED",
+  CANCELLED: "CANCELLED",
+} as const;
+
+export const ATTENDANCE_STATUS = {
+  PRESENT: "PRESENT",
+  ABSENT: "ABSENT",
+  LATE: "LATE",
+  EARLY_DEPARTURE: "EARLY_DEPARTURE",
+  MISSING_PUNCH: "MISSING_PUNCH",
+} as const;
+
+export const EXCEPTION_TYPE = {
+  MISSING_PUNCH: "MISSING_PUNCH",
+  UNUSUAL_HOURS: "UNUSUAL_HOURS",
+  INVALID_PUNCH: "INVALID_PUNCH",
+  OTHER: "OTHER",
+} as const;
+
+export const EXCEPTION_STATUS = {
+  OPEN: "OPEN",
+  REVIEWED: "REVIEWED",
+  CORRECTED: "CORRECTED",
+  DISMISSED: "DISMISSED",
+} as const;
+
+export const LEAVE_STATUS = {
+  DRAFT: "DRAFT",
+  SUBMITTED: "SUBMITTED",
+  APPROVED: "APPROVED",
+  REJECTED: "REJECTED",
+} as const;
+
+export const PAYRUN_STATUS = {
+  DRAFT: "DRAFT",
+  IN_PROGRESS: "IN_PROGRESS",
+  VALIDATED: "VALIDATED",
+  FINALIZED: "FINALIZED",
+  PAID: "PAID",
+} as const;
+
+export const RULE_CATEGORY = {
+  EARNING: "EARNING",
+  DEDUCTION: "DEDUCTION",
+  NET: "NET",
+} as const;
+
+export const CALCULATION_TYPE = {
+  FIXED: "FIXED",
+  PERCENTAGE: "PERCENTAGE",
+  REFERENCE: "REFERENCE",
+} as const;
+
+export const PAGINATION = {
+  DEFAULT_PAGE: 1,
+  DEFAULT_LIMIT: 20,
+  MAX_LIMIT: 100,
+} as const;

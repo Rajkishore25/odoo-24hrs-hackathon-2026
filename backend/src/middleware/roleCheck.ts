@@ -1,10 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { sendError } from "../utils/response.js";
-import { AuthUser } from "./auth.js";
+import { UserRole } from "../config/constants.js";
 
-type AllowedRole = AuthUser["role"];
-
-export function requireRole(...allowedRoles: AllowedRole[]) {
+export function requireRole(...allowedRoles: UserRole[]) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return sendError(res, "UNAUTHORIZED", "User not authenticated", 401);
@@ -22,3 +20,5 @@ export function requireRole(...allowedRoles: AllowedRole[]) {
     next();
   };
 }
+
+export default requireRole;

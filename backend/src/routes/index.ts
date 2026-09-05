@@ -1,8 +1,10 @@
 import { Router } from "express";
+import authRoutes from "./authRoutes.js";
 import employeeRoutes from "./employeeRoutes.js";
 import contractRoutes from "./contractRoutes.js";
 import scheduleRoutes from "./scheduleRoutes.js";
 import attendanceRoutes from "./attendanceRoutes.js";
+import leaveRoutes from "./leaveRoutes.js";
 import timeOffRoutes from "./timeOffRoutes.js";
 import { AuditService } from "../services/auditService.js";
 import { sendSuccess } from "../utils/response.js";
@@ -25,11 +27,13 @@ router.get("/audit", optionalAuth, async (req, res, next) => {
   }
 });
 
-// Domain Routes
+// Authentication & Core Services (Phase 2)
+router.use("/auth", authRoutes);
 router.use("/employees", employeeRoutes);
 router.use("/contracts", contractRoutes);
 router.use("/schedules", scheduleRoutes);
 router.use("/attendance", attendanceRoutes);
-router.use("/time-off", timeOffRoutes);
+router.use("/leave", leaveRoutes);
+router.use("/time-off", timeOffRoutes); // alias for backwards compatibility with API contract
 
 export default router;
