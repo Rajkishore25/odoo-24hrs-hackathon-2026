@@ -1,0 +1,13 @@
+node_modules
+*/node_modules
+.git
+.github
+dist
+backend/dist
+frontend/dist
+.env
+.env.local
+*.log
+npm-debug.log*
+.DS_Store
+syncFiles

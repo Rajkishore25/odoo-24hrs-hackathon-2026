@@ -6,6 +6,12 @@
     "dev:backend": "npm run dev --prefix backend",
     "dev:frontend": "npm run dev --prefix frontend",
     "build": "npm run build --prefix backend && npm run build --prefix frontend",
+    "build:backend": "npm run build --prefix backend",
+    "build:frontend": "npm run build --prefix frontend",
+    "start": "node backend/dist/server.js",
+    "seed": "npm run seed --prefix backend",
+    "prisma:deploy": "npm run prisma:deploy --prefix backend",
+    "prisma:generate": "npm run prisma:generate --prefix backend",
     "test": "npm test --prefix backend"
   }
 }
