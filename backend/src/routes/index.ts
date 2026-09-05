@@ -16,6 +16,35 @@ import { optionalAuth } from "../middleware/auth.js";
 
 const router = Router();
 
+// Root API Welcome / Sitemap endpoint
+router.get("/", (req, res) => {
+  return sendSuccess(
+    res,
+    {
+      name: "PeoplePay360 Backend API",
+      version: "1.0.0",
+      status: "online",
+      timestamp: new Date().toISOString(),
+      endpoints: {
+        auth: "/api/auth/login",
+        dashboard: "/api/dashboard",
+        employees: "/api/employees",
+        contracts: "/api/contracts",
+        schedules: "/api/schedules",
+        attendance: "/api/attendance",
+        leave: "/api/leave",
+        salaryStructures: "/api/salary-structures",
+        salaryRules: "/api/salary-rules",
+        payruns: "/api/payruns",
+        payslips: "/api/payslips",
+        audit: "/api/audit-logs",
+        health: "/api/health",
+      },
+    },
+    "PeoplePay360 API is active and operational"
+  );
+});
+
 // Health check endpoint
 router.get("/health", (req, res) => {
   return sendSuccess(res, { status: "ok", timestamp: new Date().toISOString() }, "PeoplePay360 Backend is healthy");

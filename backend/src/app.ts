@@ -18,12 +18,17 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Server root welcome / redirect to /api
+app.get("/", (req: Request, res: Response) => {
+  res.redirect("/api");
+});
+
 // Mount API routes under /api
 app.use("/api", apiRouter);
 
 // 404 Not Found Handler
 app.use((req: Request, res: Response) => {
-  return sendError(res, "NOT_FOUND", `Endpoint ${req.method} ${req.path} not found`, 404);
+  return sendError(res, "NOT_FOUND", `Endpoint ${req.method} ${req.originalUrl || req.path} not found`, 404);
 });
 
 // Centralized Error Handler

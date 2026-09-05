@@ -3,6 +3,15 @@ import request from "supertest";
 import app from "../app.js";
 
 describe("API Infrastructure & Standard Response", () => {
+  it("GET /api should return 200 with API overview and available endpoints", async () => {
+    const res = await request(app).get("/api");
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.name).toBe("PeoplePay360 Backend API");
+    expect(res.body.data.endpoints).toBeDefined();
+    expect(res.body.data.endpoints.auth).toBe("/api/auth/login");
+  });
+
   it("GET /api/health should return 200 with standard response wrapper", async () => {
     const res = await request(app).get("/api/health");
     expect(res.status).toBe(200);
