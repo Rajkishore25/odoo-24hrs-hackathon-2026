@@ -10,6 +10,7 @@ import {
   UserCheck,
   ShieldAlert,
   History,
+  Sparkles,
 } from "lucide-react";
 
 export function Sidebar({ activeTab, setActiveTab }) {
@@ -23,6 +24,7 @@ export function Sidebar({ activeTab, setActiveTab }) {
     { id: "payruns", label: "Payroll Cockpit", icon: Receipt, badge: "Core" },
     { id: "portal", label: "My Self-Service", icon: UserCheck },
     { id: "audit", label: "Audit Trail", icon: History },
+    { id: "showcase", label: "Video Showcase", icon: Sparkles, badge: "GSAP" },
   ];
 
   return (
@@ -43,18 +45,17 @@ export function Sidebar({ activeTab, setActiveTab }) {
             width: 32,
             height: 32,
             borderRadius: 8,
-            background: "linear-gradient(135deg, #6366f1 0%, #ec4899 100%)",
+            backgroundColor: "var(--primary)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "0 0 12px rgba(99, 102, 241, 0.5)",
           }}
         >
           <Receipt size={18} color="#ffffff" />
         </div>
         <div>
-          <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: -0.5, color: "#ffffff" }}>
-            PeoplePay<span style={{ color: "#818cf8" }}>360</span>
+          <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: -0.5, color: "var(--text-primary)" }}>
+            PeoplePay<span style={{ color: "var(--primary)" }}>360</span>
           </span>
           <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: -2, fontWeight: 600 }}>
             HACKATHON MVP

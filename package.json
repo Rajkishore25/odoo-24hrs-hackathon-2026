@@ -13,5 +13,8 @@
     "prisma:deploy": "npm run prisma:deploy --prefix backend",
     "prisma:generate": "npm run prisma:generate --prefix backend",
     "test": "npm test --prefix backend"
+  },
+  "dependencies": {
+    "motion": "^13.2.0"
   }
 }

@@ -1,8 +1,8 @@
 import React from "react";
 import { useAuth, DEMO_CREDENTIALS } from "../../context/AuthContext.jsx";
-import { LogOut, User, ShieldCheck, ChevronDown, Sparkles } from "lucide-react";
+import { LogOut, User, ShieldCheck, ChevronDown, Sparkles, Sun, Moon } from "lucide-react";
 
-export function Navbar({ activeTab, onToggleTour, isTourActive }) {
+export function Navbar({ activeTab, onToggleTour, isTourActive, theme, onToggleTheme }) {
   const { user, role, logout, fastLogin } = useAuth();
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
 
@@ -24,18 +24,25 @@ export function Navbar({ activeTab, onToggleTour, isTourActive }) {
         </h2>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {/* Light / Dark Mode Toggle */}
+        <button
+          className="btn btn-secondary btn-sm"
+          onClick={onToggleTheme}
+          title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          style={{ padding: "6px 11px", display: "flex", alignItems: "center", gap: 6 }}
+        >
+          {theme === "dark" ? <Sun size={14} color="#f59e0b" /> : <Moon size={14} color="#2563eb" />}
+          <span style={{ fontSize: 12, fontWeight: 600 }}>{theme === "dark" ? "Light" : "Dark"}</span>
+        </button>
+
         {/* Hackathon Judge Demo Tour Button */}
         <button
           className={`btn ${isTourActive ? "btn-primary" : "btn-secondary"} btn-sm`}
           onClick={onToggleTour}
-          style={{
-            boxShadow: isTourActive ? "0 0 15px rgba(99, 102, 241, 0.4)" : "none",
-            border: isTourActive ? "1px solid #818cf8" : "1px solid var(--border-subtle)",
-          }}
         >
-          <Sparkles size={14} color={isTourActive ? "#ffffff" : "#818cf8"} />
-          <span>{isTourActive ? "Tour Active" : "⭐ Start Demo Tour"}</span>
+          <Sparkles size={14} color={isTourActive ? "#ffffff" : "var(--primary)"} />
+          <span>{isTourActive ? "Tour Active" : "Demo Tour"}</span>
         </button>
 
         {/* Quick Role Switcher for Hackathon Demo */}
@@ -104,7 +111,8 @@ export function Navbar({ activeTab, onToggleTour, isTourActive }) {
               width: 32,
               height: 32,
               borderRadius: "50%",
-              background: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+              backgroundColor: "var(--primary)",
+              color: "#ffffff",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",

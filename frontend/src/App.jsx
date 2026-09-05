@@ -13,11 +13,25 @@ import { PayrunsPage } from "./pages/PayrunsPage.jsx";
 import { EmployeePortalPage } from "./pages/EmployeePortalPage.jsx";
 import { AuditLogsPage } from "./pages/AuditLogsPage.jsx";
 import { DemoTourGuide } from "./components/demo/DemoTourGuide.jsx";
+import HeroScrollVideoRevealDemo from "./components/ui/demo.tsx";
 
 export function App() {
   const { isAuthenticated, loading } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isTourActive, setIsTourActive] = useState(true);
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("peoplepay360_theme") || "dark";
+  });
+
+  React.useEffect(() => {
+    document.documentElement.classList.remove("light", "dark");
+    document.documentElement.classList.add(theme);
+    localStorage.setItem("peoplepay360_theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  };
 
   if (loading) {
     return (
@@ -59,6 +73,8 @@ export function App() {
         return <EmployeePortalPage />;
       case "audit":
         return <AuditLogsPage />;
+      case "showcase":
+        return <HeroScrollVideoRevealDemo />;
       default:
         return <DashboardPage setActiveTab={setActiveTab} />;
     }
@@ -72,12 +88,16 @@ export function App() {
           activeTab={activeTab}
           isTourActive={isTourActive}
           onToggleTour={() => setIsTourActive(!isTourActive)}
+          theme={theme}
+          onToggleTheme={toggleTheme}
         />
-        <main className="content-body">{renderContent()}</main>
+        <main className="content-body" style={{ padding: activeTab === "showcase" ? 0 : 24 }}>
+          {renderContent()}
+        </main>
       </div>
 
       {/* Floating Guided Demo Tour Mode */}
-      {isTourActive && (
+      {isTourActive && activeTab !== "showcase" && (
         <DemoTourGuide
           activeTab={activeTab}
           setActiveTab={setActiveTab}
