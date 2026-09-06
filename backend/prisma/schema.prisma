@@ -1,0 +1,343 @@
+// PeoplePay360 — Prisma Schema
+// Database: PostgreSQL
+// Version: 1.0
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  SUPER_ADMIN
+  HR_MANAGER
+  PAYROLL_OFFICER
+  LINE_MANAGER
+  EMPLOYEE
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum ContractStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EARLY_DEPARTURE
+  MISSING_PUNCH
+}
+
+enum ExceptionType {
+  MISSING_PUNCH
+  UNUSUAL_HOURS
+  INVALID_PUNCH
+  OTHER
+}
+
+enum ExceptionStatus {
+  OPEN
+  REVIEWED
+  CORRECTED
+  DISMISSED
+}
+
+enum TimeOffUnit {
+  DAYS
+  HOURS
+}
+
+enum TimeOffRequestStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum SalaryRuleCategory {
+  EARNING
+  DEDUCTION
+  NET
+}
+
+enum SalaryCalculationType {
+  FIXED
+  PERCENTAGE
+  REFERENCE
+}
+
+enum PayrunStatus {
+  DRAFT
+  IN_PROGRESS
+  VALIDATED
+  FINALIZED
+  PAID
+}
+
+enum PayslipStatus {
+  DRAFT
+  COMPUTED
+  VALIDATED
+  PAID
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  role         UserRole
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  employee     Employee?
+  auditLogs    AuditLog[]
+  createdPayruns Payrun[] @relation("PayrunCreatedBy")
+  approvedLeave  TimeOffRequest[] @relation("LeaveApprover")
+  reviewedExceptions AttendanceException[] @relation("ExceptionReviewer")
+}
+
+model Employee {
+  id                String         @id @default(uuid())
+  userId            String?        @unique
+  user              User?          @relation(fields: [userId], references: [id])
+  employeeCode      String         @unique
+  name              String
+  email             String
+  phone             String?
+  department        String?
+  designation       String?
+  joiningDate       DateTime       @db.Date
+  status            EmployeeStatus @default(ACTIVE)
+  bankAccountNumber String?
+  bankName          String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  contracts         Contract[]
+  attendances       Attendance[]
+  attendanceExceptions AttendanceException[]
+  timeOffAllocations   TimeOffAllocation[]
+  timeOffRequests      TimeOffRequest[]
+  payslips             Payslip[]
+}
+
+model WorkingSchedule {
+  id           String    @id @default(uuid())
+  name         String
+  startTime    String    // "HH:MM" format
+  endTime      String    // "HH:MM" format
+  breakMinutes Int       @default(0)
+  workingDays  Json      // ["MON","TUE","WED","THU","FRI"]
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  contracts    Contract[]
+}
+
+model SalaryStructure {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  rules       SalaryRule[]
+  contracts   Contract[]
+}
+
+model SalaryRule {
+  id                  String                @id @default(uuid())
+  salaryStructureId   String
+  salaryStructure     SalaryStructure       @relation(fields: [salaryStructureId], references: [id])
+  name                String
+  code                String
+  category            SalaryRuleCategory
+  sequence            Int
+  calculationType     SalaryCalculationType
+  value               Decimal?              @db.Decimal(14, 2)
+  dependsOnCode       String?
+  formulaDescription  String?
+  isActive            Boolean               @default(true)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  payslipLines        PayslipLine[]
+
+  @@unique([salaryStructureId, code])
+}
+
+model Contract {
+  id                  String          @id @default(uuid())
+  employeeId          String
+  employee            Employee        @relation(fields: [employeeId], references: [id])
+  startDate           DateTime        @db.Date
+  endDate             DateTime?       @db.Date
+  wage                Decimal         @db.Decimal(14, 2)
+  salaryStructureId   String
+  salaryStructure     SalaryStructure @relation(fields: [salaryStructureId], references: [id])
+  workingScheduleId   String
+  workingSchedule     WorkingSchedule @relation(fields: [workingScheduleId], references: [id])
+  status              ContractStatus  @default(DRAFT)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+}
+
+model Attendance {
+  id           String           @id @default(uuid())
+  employeeId   String
+  employee     Employee         @relation(fields: [employeeId], references: [id])
+  date         DateTime         @db.Date
+  checkIn      DateTime?
+  checkOut     DateTime?
+  workedHours  Decimal          @default(0) @db.Decimal(6, 2)
+  status       AttendanceStatus @default(PRESENT)
+  hasException Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  exceptions   AttendanceException[]
+
+  @@unique([employeeId, date])
+}
+
+model AttendanceException {
+  id           String           @id @default(uuid())
+  employeeId   String
+  employee     Employee         @relation(fields: [employeeId], references: [id])
+  attendanceId String
+  attendance   Attendance       @relation(fields: [attendanceId], references: [id])
+  type         ExceptionType
+  status       ExceptionStatus  @default(OPEN)
+  reason       String?
+  reviewedById String?
+  reviewedBy   User?            @relation("ExceptionReviewer", fields: [reviewedById], references: [id])
+  reviewedAt   DateTime?
+  createdAt    DateTime         @default(now())
+}
+
+model TimeOffType {
+  id        String      @id @default(uuid())
+  name      String      @unique
+  isPaid    Boolean
+  unit      TimeOffUnit @default(DAYS)
+  isActive  Boolean     @default(true)
+
+  allocations TimeOffAllocation[]
+  requests    TimeOffRequest[]
+}
+
+model TimeOffAllocation {
+  id             String      @id @default(uuid())
+  employeeId     String
+  employee       Employee    @relation(fields: [employeeId], references: [id])
+  timeOffTypeId  String
+  timeOffType    TimeOffType @relation(fields: [timeOffTypeId], references: [id])
+  allocatedDays  Decimal     @db.Decimal(8, 2)
+  validFrom      DateTime    @db.Date
+  validTo        DateTime    @db.Date
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model TimeOffRequest {
+  id              String               @id @default(uuid())
+  employeeId      String
+  employee        Employee             @relation(fields: [employeeId], references: [id])
+  timeOffTypeId   String
+  timeOffType     TimeOffType          @relation(fields: [timeOffTypeId], references: [id])
+  startDate       DateTime             @db.Date
+  endDate         DateTime             @db.Date
+  requestedDays   Decimal              @db.Decimal(8, 2)
+  reason          String?
+  status          TimeOffRequestStatus @default(DRAFT)
+  approverId      String?
+  approver        User?                @relation("LeaveApprover", fields: [approverId], references: [id])
+  approvedAt      DateTime?
+  rejectionReason String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+}
+
+model Payrun {
+  id               String       @id @default(uuid())
+  name             String
+  periodStart      DateTime     @db.Date
+  periodEnd        DateTime     @db.Date
+  status           PayrunStatus @default(DRAFT)
+  totalGross       Decimal      @default(0) @db.Decimal(16, 2)
+  totalDeductions  Decimal      @default(0) @db.Decimal(16, 2)
+  totalNet         Decimal      @default(0) @db.Decimal(16, 2)
+  createdById      String
+  createdBy        User         @relation("PayrunCreatedBy", fields: [createdById], references: [id])
+  finalizedAt      DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  payslips         Payslip[]
+}
+
+model Payslip {
+  id               String        @id @default(uuid())
+  payrunId         String
+  payrun           Payrun        @relation(fields: [payrunId], references: [id])
+  employeeId       String
+  employee         Employee      @relation(fields: [employeeId], references: [id])
+  status           PayslipStatus @default(DRAFT)
+  gross            Decimal       @default(0) @db.Decimal(14, 2)
+  totalDeductions  Decimal       @default(0) @db.Decimal(14, 2)
+  net              Decimal       @default(0) @db.Decimal(14, 2)
+  pdfPath          String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  lines            PayslipLine[]
+
+  @@unique([payrunId, employeeId])
+}
+
+model PayslipLine {
+  id                 String             @id @default(uuid())
+  payslipId          String
+  payslip            Payslip            @relation(fields: [payslipId], references: [id])
+  ruleId             String?
+  rule               SalaryRule?        @relation(fields: [ruleId], references: [id])
+  code               String
+  name               String
+  category           SalaryRuleCategory
+  sequence           Int
+  inputValues        Json               // { "BASIC": 50000 }
+  formulaDescription String?
+  amount             Decimal            @db.Decimal(14, 2)
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  action     String
+  entityType String
+  entityId   String?
+  oldData    Json?
+  newData    Json?
+  reason     String?
+  createdAt  DateTime @default(now())
+}
