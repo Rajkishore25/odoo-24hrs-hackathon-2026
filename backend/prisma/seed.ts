@@ -150,6 +150,17 @@ async function main() {
       formulaDescription: 'Fixed ₹200/month',
     },
     {
+      id: 'rule-unpaid-001',
+      code: 'UNPAID_LEAVE',
+      name: 'Unpaid / Excess Leave Deduction',
+      category: SalaryRuleCategory.DEDUCTION,
+      sequence: 70,
+      calculationType: SalaryCalculationType.REFERENCE,
+      value: null,
+      dependsOnCode: null,
+      formulaDescription: '(BASIC ÷ EXPECTED_DAYS) × TOTAL_UNPAID_DAYS',
+    },
+    {
       id: 'rule-net-001',
       code: 'NET',
       name: 'Net Salary',

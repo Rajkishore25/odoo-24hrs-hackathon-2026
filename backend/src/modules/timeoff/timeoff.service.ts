@@ -236,13 +236,53 @@ export async function getApprovedLeaveInPeriod(employeeId: string, periodStart: 
   });
 
   let totalDays = 0;
+  let paidLeaveDays = 0;
+  let unpaidLeaveDays = 0;
+
   for (const req of requests) {
     const overlapStart = req.startDate > periodStart ? req.startDate : periodStart;
     const overlapEnd = req.endDate < periodEnd ? req.endDate : periodEnd;
     if (overlapEnd >= overlapStart) {
-      totalDays += countCalendarDays(overlapStart, overlapEnd);
+      const days = countCalendarDays(overlapStart, overlapEnd);
+      totalDays += days;
+      if (req.timeOffType.isPaid) {
+        paidLeaveDays += days;
+      } else {
+        unpaidLeaveDays += days;
+      }
     }
   }
 
-  return { requests, totalDays };
+  return { requests, totalDays, paidLeaveDays, unpaidLeaveDays };
+}
+
+/**
+ * Get total allocated paid leave days for an employee in a given period.
+ * Used by payroll engine to determine how many absent days are covered by paid leave.
+ */
+export async function getPaidLeaveAllocationForPeriod(
+  employeeId: string,
+  periodStart: Date,
+  periodEnd: Date
+): Promise<number> {
+  // Get all paid leave types
+  const paidTypes = await prisma.timeOffType.findMany({
+    where: { isActive: true, isPaid: true },
+    select: { id: true },
+  });
+  if (paidTypes.length === 0) return 0;
+
+  const paidTypeIds = paidTypes.map((t) => t.id);
+
+  // Get allocations valid during this period
+  const allocations = await prisma.timeOffAllocation.findMany({
+    where: {
+      employeeId,
+      timeOffTypeId: { in: paidTypeIds },
+      validFrom: { lte: periodEnd },
+      validTo: { gte: periodStart },
+    },
+  });
+
+  return allocations.reduce((sum, a) => sum + Number(a.allocatedDays), 0);
 }

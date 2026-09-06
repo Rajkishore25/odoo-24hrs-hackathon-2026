@@ -329,36 +329,63 @@ export function EmployeePortalPage() {
 
         <TabsContent value="payslips">
           {payslips.length === 0 ? (
-            <EmptyState icon={Receipt} title="No payslips yet" description="Your payslips will appear here after payroll is finalized." />
+            <EmptyState
+              icon={Receipt}
+              title="No payslips yet"
+              description="Your payslips will appear here after payroll is finalized by HR."
+            />
           ) : (
             <div className="space-y-2">
               {payslips.map((ps: any) => (
-                <Card key={ps.id}>
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div>
-                      <p className="text-sm font-medium">{ps.payrun?.name ?? 'Payslip'}</p>
-                      {ps.payrun && (
-                        <p className="text-xs text-muted-foreground">
-                          {formatDate(ps.payrun.periodStart)} – {formatDate(ps.payrun.periodEnd)}
+                <Card
+                  key={ps.id}
+                  className={ps.status === 'PAID' ? 'border-success/30' : ''}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="space-y-1 min-w-0">
+                        {/* Payrun name + period */}
+                        <p className="text-sm font-semibold text-foreground truncate">
+                          {ps.payrun?.name ?? 'Payslip'}
                         </p>
-                      )}
-                      <p className="text-sm font-bold text-success mt-1">{formatCurrency(ps.net)}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => navigate(`/payslips/${ps.id}`)}
-                      >
-                        View
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => downloadPayslip(ps.id)}
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
+                        {ps.payrun && (
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(ps.payrun.periodStart)} – {formatDate(ps.payrun.periodEnd)}
+                          </p>
+                        )}
+
+                        {/* Earnings breakdown summary */}
+                        <div className="flex gap-4 text-xs mt-1">
+                          <span className="text-muted-foreground">
+                            Gross: <span className="font-medium text-foreground">{formatCurrency(ps.gross)}</span>
+                          </span>
+                          <span className="text-muted-foreground">
+                            Deductions: <span className="font-medium text-warning">{formatCurrency(ps.totalDeductions)}</span>
+                          </span>
+                          <span className="text-muted-foreground">
+                            Net: <span className="font-bold text-success">{formatCurrency(ps.net)}</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => navigate(`/payslips/${ps.id}`)}
+                        >
+                          View
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => downloadPayslip(ps.id)}
+                          title="Download PDF"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

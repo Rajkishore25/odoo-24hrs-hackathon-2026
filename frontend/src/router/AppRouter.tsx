@@ -65,9 +65,12 @@ export function AppRouter() {
             <Route path="/payruns/:id" element={<PayrunDetailPage />} />
             <Route path="/payruns/:id/validation" element={<ValidationCockpitPage />} />
             <Route path="/payslips" element={<PayrunsPage />} />
-            <Route path="/payslips/:id" element={<PayslipDetailPage />} />
             <Route path="/audit-logs" element={<AuditLogsPage />} />
           </Route>
+
+          {/* Payslip detail — accessible to ALL authenticated users.
+              Backend enforces that employees can only view their own payslip. */}
+          <Route path="/payslips/:id" element={<PayslipDetailPage />} />
 
           {/* Employee portal */}
           <Route element={<ProtectedRoute allowedRoles={['EMPLOYEE']} />}>
