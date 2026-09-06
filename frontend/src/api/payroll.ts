@@ -17,6 +17,9 @@ export const payrollApi = {
 
   deletePayrun: (id: string) => api.delete(`/payruns/${id}`),
 
+  updatePayslip: (id: string, data: unknown) => api.patch(`/payslips/${id}`, data),
+  deletePayslip: (id: string) => api.delete(`/payslips/${id}`),
+
   getDashboard: () => api.get('/dashboard'),
   listAuditLogs: (params?: Record<string, string>) => api.get('/audit-logs', { params }),
 };

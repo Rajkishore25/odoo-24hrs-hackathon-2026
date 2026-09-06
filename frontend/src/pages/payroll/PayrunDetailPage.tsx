@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Play, Shield, CheckCircle2, Loader2,
-  Users, TrendingDown, DollarSign
+  Users, TrendingDown, DollarSign, Pencil, Trash2, AlertTriangle,
 } from 'lucide-react';
 import { payrollApi } from '@/api/payroll';
 import { employeesApi } from '@/api/employees';
+import { useAuth } from '@/context/AuthContext';
 import { Payrun, Employee } from '@/types';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { LoadingState } from '@/components/ui/loading-state';
+import { Separator } from '@/components/ui/separator';
 import { formatDate, formatCurrency, formatDateRange } from '@/lib/utils';
 import { toast } from '@/hooks/useToast';
 import { getApiError } from '@/api/client';
@@ -49,6 +51,19 @@ export function PayrunDetailPage() {
   const [validating, setValidating] = useState(false);
   const [finalizing, setFinalizing] = useState(false);
   const [showFinalizeConfirm, setShowFinalizeConfirm] = useState(false);
+
+  // Payslip edit/delete state
+  const [editPayslip, setEditPayslip] = useState<any | null>(null);
+  const [editGross, setEditGross] = useState('');
+  const [editDeductions, setEditDeductions] = useState('');
+  const [editNet, setEditNet] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [deletePayslip, setDeletePayslipTarget] = useState<any | null>(null);
+  const [deletingPayslip, setDeletingPayslip] = useState(false);
+
+  // Role check
+  const { user } = useAuth();
+  const canManagePayslips = ['SUPER_ADMIN', 'HR_MANAGER', 'PAYROLL_OFFICER'].includes(user?.role ?? '');
 
   useEffect(() => {
     if (!isNew && id) {
@@ -141,6 +156,52 @@ export function PayrunDetailPage() {
       prev.includes(empId) ? prev.filter((id) => id !== empId) : [...prev, empId]
     );
   };
+
+  // ── Payslip edit ─────────────────────────────────────────────────────────────
+  function openEditPayslip(ps: any) {
+    setEditPayslip(ps);
+    setEditGross(String(ps.gross));
+    setEditDeductions(String(ps.totalDeductions));
+    setEditNet(String(ps.net));
+  }
+
+  async function handleSavePayslip() {
+    if (!editPayslip) return;
+    setSavingEdit(true);
+    try {
+      await payrollApi.updatePayslip(editPayslip.id, {
+        gross: parseFloat(editGross),
+        totalDeductions: parseFloat(editDeductions),
+        net: parseFloat(editNet),
+      });
+      toast.success('Payslip updated');
+      setEditPayslip(null);
+      // Reload payrun to get updated totals
+      const res = await payrollApi.getPayrun(payrun!.id);
+      setPayrun(res.data.data);
+    } catch (err) {
+      toast.error('Failed to update payslip', getApiError(err));
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
+  // ── Payslip delete ────────────────────────────────────────────────────────────
+  async function handleDeletePayslip() {
+    if (!deletePayslip) return;
+    setDeletingPayslip(true);
+    try {
+      await payrollApi.deletePayslip(deletePayslip.id);
+      toast.success(`Payslip for ${deletePayslip.employee?.name} removed`);
+      setDeletePayslipTarget(null);
+      const res = await payrollApi.getPayrun(payrun!.id);
+      setPayrun(res.data.data);
+    } catch (err) {
+      toast.error('Failed to delete payslip', getApiError(err));
+    } finally {
+      setDeletingPayslip(false);
+    }
+  }
 
   // ── Create wizard ────────────────────────────────────────────────────────────
   if (isNew) {
@@ -281,7 +342,16 @@ export function PayrunDetailPage() {
       {/* Payslips table */}
       {(payrun as any).payslips && (payrun as any).payslips.length > 0 && (
         <Card>
-          <CardHeader><CardTitle className="text-sm">Employee Payslips</CardTitle></CardHeader>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm">Employee Payslips</CardTitle>
+              {!isFinalized && (
+                <p className="text-xs text-muted-foreground">
+                  Edit or remove individual payslips before finalizing
+                </p>
+              )}
+            </div>
+          </CardHeader>
           <CardContent className="p-0">
             <table className="w-full text-sm">
               <thead>
@@ -307,11 +377,38 @@ export function PayrunDetailPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3">
-                      {isFinalized && (
-                        <Button size="sm" variant="ghost" onClick={() => navigate(`/payslips/${ps.id}`)}>
-                          View
-                        </Button>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {/* View — always available after finalization */}
+                        {isFinalized && (
+                          <Button size="sm" variant="ghost" onClick={() => navigate(`/payslips/${ps.id}`)}>
+                            View
+                          </Button>
+                        )}
+
+                        {/* Edit + Delete — only for non-finalized payruns */}
+                        {!isFinalized && canManagePayslips && (
+                          <>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                              title="Edit payslip amounts"
+                              onClick={() => openEditPayslip(ps)}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-muted-foreground hover:text-critical hover:bg-critical-muted"
+                              title="Remove this employee from payrun"
+                              onClick={() => setDeletePayslipTarget(ps)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -320,6 +417,120 @@ export function PayrunDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* ── Edit Payslip dialog ───────────────────────────────────────────── */}
+      <Dialog open={!!editPayslip} onOpenChange={(o) => !o && setEditPayslip(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Edit Payslip — {editPayslip?.employee?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning-muted px-3 py-2.5">
+              <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+              <p className="text-xs text-warning">
+                Manually editing payslip amounts overrides the computed values.
+                Recomputing will reset these changes.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Gross Salary (₹)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={editGross}
+                onChange={(e) => {
+                  setEditGross(e.target.value);
+                  // Auto-calculate net when gross or deductions change
+                  const g = parseFloat(e.target.value) || 0;
+                  const d = parseFloat(editDeductions) || 0;
+                  setEditNet(String(Math.max(0, g - d)));
+                }}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Total Deductions (₹)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={editDeductions}
+                onChange={(e) => {
+                  setEditDeductions(e.target.value);
+                  const g = parseFloat(editGross) || 0;
+                  const d = parseFloat(e.target.value) || 0;
+                  setEditNet(String(Math.max(0, g - d)));
+                }}
+              />
+            </div>
+            <Separator />
+            <div className="space-y-1.5">
+              <Label>Net Pay (₹)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={editNet}
+                onChange={(e) => setEditNet(e.target.value)}
+                className={parseFloat(editNet) < 0 ? 'border-critical' : ''}
+              />
+              {parseFloat(editNet) < 0 && (
+                <p className="text-xs text-critical">Net salary cannot be negative</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditPayslip(null)}>Cancel</Button>
+            <Button
+              onClick={handleSavePayslip}
+              disabled={savingEdit || parseFloat(editNet) < 0}
+            >
+              {savingEdit ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Pencil className="mr-2 h-4 w-4" />}
+              {savingEdit ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Delete Payslip dialog ─────────────────────────────────────────── */}
+      <Dialog open={!!deletePayslip} onOpenChange={(o) => !o && setDeletePayslipTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-critical">
+              <AlertTriangle className="h-5 w-5" /> Remove Employee from Payrun?
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-foreground">
+              Remove payslip for{' '}
+              <span className="font-semibold">{deletePayslip?.employee?.name}</span>?
+            </p>
+            <div className="rounded-md border border-border bg-muted/50 p-3 space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Gross</span>
+                <span>{formatCurrency(deletePayslip?.gross ?? 0)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Net</span>
+                <span className="font-medium text-success">{formatCurrency(deletePayslip?.net ?? 0)}</span>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              This removes this employee from the current payrun. The payrun totals will be recalculated.
+              You can recompute to include them again.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletePayslipTarget(null)} disabled={deletingPayslip}>
+              Cancel
+            </Button>
+            <Button variant="critical" onClick={handleDeletePayslip} disabled={deletingPayslip}>
+              {deletingPayslip
+                ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                : <Trash2 className="mr-2 h-4 w-4" />
+              }
+              {deletingPayslip ? 'Removing...' : 'Remove Payslip'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Finalize confirmation */}
       <Dialog open={showFinalizeConfirm} onOpenChange={setShowFinalizeConfirm}>
